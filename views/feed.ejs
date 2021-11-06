@@ -26,10 +26,8 @@
               <a href="/post/<%= posts[i]._id %>">
                 <img src="<%= posts[i].img %>" alt="">
                 <h4><%= posts[i].caption %></h4>
-                
-                <a href="/page/<%= posts[i].postedBy %>"><%= posts[i].postedBy %></a>
-                
               </a>  
+               <a href="/page/<%= posts[i].postedBy %>"><%= posts[i].postedBy %></a>
               <span class="likeCount" data-id="<%= posts[i]._id %>"><%= posts[i].postLikes %></span>
               <button class="likeBtn">Like</button>
             </li>

@@ -40,22 +40,47 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 				});
 			});
 	});
-	//post page
+	//===========post page============
+	// app.get('/post/:zebra', isLoggedIn, function (req, res) {
+	// 	let postId = ObjectId(req.params.zebra);
+	// 	console.log('yooooooooooooo', postId);
+	// 	db.collection('posts')
+	// 		.find({ _id: postId })
+	// 		.toArray((err, result) => {
+	// 			if (err) return console.log(err);
+	// 			res.render('post.ejs', {
+	// 				posts: result,
+	// 			});
+	// 		});
+	// });
 	app.get('/post/:zebra', isLoggedIn, function (req, res) {
+		console.log('params', req.params);
 		let postId = ObjectId(req.params.zebra);
-		console.log(postId);
+		console.log('objectId', postId);
 		db.collection('posts')
-			.find({ _id: postId })
+			.find({
+				_id: postId,
+			})
 			.toArray((err, result) => {
 				if (err) return console.log(err);
-				res.render('post.ejs', {
-					posts: result,
-				});
+				db.collection('comments')
+					.find({
+						postId: postId,
+					})
+					.toArray((err, result02) => {
+						res.render('post.ejs', {
+							user: req.user,
+							posts: result,
+							comments: result02,
+						});
+					});
 			});
 	});
 	//profile page
 	app.get('/page/:id', isLoggedIn, function (req, res) {
-		let postId = ObjectId(req.params.id);
+		let params = req.params.id;
+		console.log(params);
+		let postId = ObjectId(params);
 		db.collection('posts')
 			.find({ postedBy: postId })
 			.toArray((err, result) => {
@@ -89,18 +114,22 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 		);
 	});
 
-	// message board routes ===============================================================
-
-	app.post('/messages', (req, res) => {
-		db.collection('messages').save(
-			{ name: req.body.name, msg: req.body.msg, thumbUp: 0, thumbDown: 0 },
+	app.post('/comment/:zebra', (req, res) => {
+		console.log(req.body.comment);
+		console.log('params', req.params.zebra);
+		let postId = ObjectId(req.params.zebra);
+		console.log('object', postId);
+		db.collection('comments').save(
+			{ comment: req.body.comment, postId: postId },
 			(err, result) => {
 				if (err) return console.log(err);
 				console.log('saved to database');
-				res.redirect('/profile');
+				res.redirect(`/post/${postId}`);
 			}
 		);
 	});
+
+	// message board routes ===============================================================
 
 	app.put('/likePost', (req, res) => {
 		let likedPostId = ObjectId(req.body.likedPostId);
