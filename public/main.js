@@ -3,9 +3,10 @@ var trash = document.getElementsByClassName('fa-trash');
 
 Array.from(likeBtn).forEach(function (element) {
 	element.addEventListener('click', function () {
-		const likedPostId = this.parentNode.childNodes[4].dataset.id;
-		const totalLikes = this.parentNode.childNodes[4].innerText;
-
+		console.log(this.parentNode.childNodes[1].childNodes[1]);
+		const likedPostId = this.parentNode.childNodes[1].childNodes[1].dataset.id;
+		const totalLikes = this.parentNode.childNodes[1].childNodes[1].innerText;
+		console.log(totalLikes);
 		fetch('likePost', {
 			method: 'put',
 			headers: { 'Content-Type': 'application/json' },
@@ -38,7 +39,7 @@ Array.from(trash).forEach(function (element) {
 				msg: msg,
 			}),
 		}).then(function (response) {
-			window.location.reload();
+			// window.location.reload();
 		});
 	});
 });

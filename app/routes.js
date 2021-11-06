@@ -10,7 +10,7 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 	});
 	var upload = multer({ storage: storage });
 
-	// normal routes ===============================================================
+	// GET ===============================================================
 
 	// show the home page (will also have our login links)
 	app.get('/', function (req, res) {
@@ -29,7 +29,8 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 				});
 			});
 	});
-	//feed page
+
+	//====feed page=====
 	app.get('/feed', function (req, res) {
 		db.collection('posts')
 			.find()
@@ -41,21 +42,10 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 			});
 	});
 	//===========post page============
-	// app.get('/post/:zebra', isLoggedIn, function (req, res) {
-	// 	let postId = ObjectId(req.params.zebra);
-	// 	console.log('yooooooooooooo', postId);
-	// 	db.collection('posts')
-	// 		.find({ _id: postId })
-	// 		.toArray((err, result) => {
-	// 			if (err) return console.log(err);
-	// 			res.render('post.ejs', {
-	// 				posts: result,
-	// 			});
-	// 		});
-	// });
-	app.get('/post/:zebra', isLoggedIn, function (req, res) {
+
+	app.get('/post/:postId', isLoggedIn, function (req, res) {
 		console.log('params', req.params);
-		let postId = ObjectId(req.params.zebra);
+		let postId = ObjectId(req.params.postId);
 		console.log('objectId', postId);
 		db.collection('posts')
 			.find({
@@ -76,9 +66,12 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 					});
 			});
 	});
-	//profile page
+
+	//======visitor profile page =========
 	app.get('/page/:id', isLoggedIn, function (req, res) {
+		console.log('FIRST PARAMS', req.params.id);
 		let params = req.params.id;
+		console.log('PARAMSS', params);
 		console.log(params);
 		let postId = ObjectId(params);
 		db.collection('posts')
@@ -91,18 +84,17 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 			});
 	});
 
-	// LOGOUT ==============================
-	app.get('/logout', function (req, res) {
-		req.logout();
-		res.redirect('/');
-	});
-	// post routes
+	// !POSTS
+
+	//======= Makes post ========
 	app.post('/makePost', upload.single('file-to-upload'), (req, res) => {
 		let user = req.user._id;
+		let userName = req.user.local.email;
 		db.collection('posts').save(
 			{
 				caption: req.body.caption,
 				img: 'images/uploads/' + req.file.filename,
+				userName: userName,
 				postedBy: user,
 				postLikes: 0,
 			},
@@ -114,13 +106,12 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 		);
 	});
 
-	app.post('/comment/:zebra', (req, res) => {
-		console.log(req.body.comment);
-		console.log('params', req.params.zebra);
-		let postId = ObjectId(req.params.zebra);
-		console.log('object', postId);
+	// =====comment=======
+	app.post('/comment/:postId', (req, res) => {
+		let userName = req.user.local.email;
+		let postId = ObjectId(req.params.postId);
 		db.collection('comments').save(
-			{ comment: req.body.comment, postId: postId },
+			{ comment: req.body.comment, postId: postId, userName: userName },
 			(err, result) => {
 				if (err) return console.log(err);
 				console.log('saved to database');
@@ -129,8 +120,8 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 		);
 	});
 
-	// message board routes ===============================================================
-
+	//!UPDATE
+	// =====like post=====
 	app.put('/likePost', (req, res) => {
 		let likedPostId = ObjectId(req.body.likedPostId);
 		let totalLikes = Number(req.body.totalLikes);
@@ -154,6 +145,7 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 		);
 	});
 
+	//! Delete
 	app.delete('/messages', (req, res) => {
 		db.collection('messages').findOneAndDelete(
 			{ name: req.body.name, msg: req.body.msg },
@@ -168,7 +160,6 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 	// AUTHENTICATE (FIRST LOGIN) ==================================================
 	// =============================================================================
 
-	// locally --------------------------------
 	// LOGIN ===============================
 	// show the login form
 	app.get('/login', function (req, res) {
@@ -200,23 +191,6 @@ module.exports = function (app, passport, db, multer, ObjectId) {
 			failureFlash: true, // allow flash messages
 		})
 	);
-
-	// =============================================================================
-	// UNLINK ACCOUNTS =============================================================
-	// =============================================================================
-	// used to unlink accounts. for social accounts, just remove the token
-	// for local account, remove email and password
-	// user account will stay active in case they want to reconnect in the future
-
-	// local -----------------------------------
-	app.get('/unlink/local', isLoggedIn, function (req, res) {
-		var user = req.user;
-		user.local.email = undefined;
-		user.local.password = undefined;
-		user.save(function (err) {
-			res.redirect('/profile');
-		});
-	});
 };
 
 // route middleware to ensure user is logged in
